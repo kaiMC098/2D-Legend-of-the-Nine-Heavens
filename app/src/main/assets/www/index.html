@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Cửu Thiên Truyện Kỳ</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- MÀN HÌNH CHÍNH / TẠO NHÂN VẬT -->
+  <div id="title-screen" class="screen active">
+    <div class="title-bg-glow"></div>
+    <div class="title-card">
+      <div class="avatar-ring">
+        <img src="assets/avatar.png" alt="Cửu Thiên Truyện Kỳ" class="title-avatar" />
+        <span class="version-badge">v1.0.0 • Cửu Thiên</span>
+      </div>
+      <h1 class="game-title">Cửu Thiên Truyện Kỳ</h1>
+      <p class="game-subtitle">Tu Tiên • Cửu Trọng Thiên Lôi • Luân Hồi Đạo Quả</p>
+
+      <div id="continue-box" class="hidden">
+        <button class="btn btn-gold btn-lg" onclick="Game.continueSavedGame()">Tiếp Tục Tu Luyện</button>
+        <p id="continue-summary" class="sub-note"></p>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-jade btn-lg" onclick="Game.openNewLifeSetup()">Khởi Đầu Kiếp Mới</button>
+        <button class="btn btn-outline" onclick="Game.openRebornShopModal(true)">Cửa Hàng Luân Hồi (<span id="title-merit">1000</span> Công Đức)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MÀN HÌNH CHỌN THIÊN PHÚ & TẠO NHÂN VẬT -->
+  <div id="setup-screen" class="screen">
+    <div class="setup-container">
+      <div class="setup-header">
+        <h2>Khởi Tạo Đạo Hữu</h2>
+        <button class="btn btn-sm btn-ghost" onclick="Game.showScreen('title-screen')">Quay Lại</button>
+      </div>
+
+      <div class="setup-profile">
+        <img src="assets/avatar.png" class="setup-avatar" alt="Avatar" />
+        <div class="setup-inputs">
+          <label>Đạo Hiệu:</label>
+          <input id="input-player-name" type="text" maxlength="16" value="Lâm Thanh Huyên" placeholder="Nhập đạo hiệu..." />
+          <label>Ngũ Hành Linh Mạch:</label>
+          <select id="select-element">
+            <option value="Kim">Kim Linh Mạch (+15% Công Kích)</option>
+            <option value="Mộc" selected>Mộc Linh Mạch (+20% Hồi Phục & Thọ Nguyên)</option>
+            <option value="Thủy">Thủy Linh Mạch (+15% Tốc Độ Tu Luyện)</option>
+            <option value="Hỏa">Hỏa Linh Mạch (+12% Bạo Kích & Luyện Đan)</option>
+            <option value="Thổ">Thổ Linh Mạch (+20% Phòng Thủ & Giảm Thiên Lôi)</option>
+          </select>
+          <label>Tông Màu Y Phục (Dịch Dung):</label>
+          <select id="select-palette">
+            <option value="NgocThanh" selected>Ngọc Thanh (Xanh Ngọc - Trắng)</option>
+            <option value="HuyetMa">Huyết Ma (Đỏ Chu Sa - Đen)</option>
+            <option value="KimTien">Kim Tiên (Vàng Kim - Hổ Phách)</option>
+            <option value="UMinh">U Minh (Tím Lam - Huyền Bạc)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="synergy-bar">
+        <span>Chọn <strong>3 Thiên Phú Bẩm Sinh</strong> (<span id="selected-trait-count">0</span>/3)</span>
+        <span id="setup-synergy-preview" class="badge-jade">Cộng hưởng: Chưa kích hoạt</span>
+      </div>
+
+      <div id="setup-traits-grid" class="traits-grid"></div>
+
+      <div class="setup-footer">
+        <button class="btn btn-outline" onclick="Game.openRebornShopModal(false)">Mở Khóa Thêm Thiên Phú</button>
+        <button class="btn btn-gold btn-lg" onclick="Game.startNewLife()">Bước Vào Tiên Đồ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MÀN HÌNH CHƠI CHÍNH -->
+  <div id="game-screen" class="screen">
+    <!-- TOP HUD -->
+    <header class="hud-top">
+      <div class="hud-player" onclick="Game.openModal('character')">
+        <img src="assets/avatar.png" class="hud-avatar" alt="Avatar" />
+        <div class="hud-info">
+          <div class="hud-name-row">
+            <span id="hud-name">Lâm Thanh Huyên</span>
+            <span id="hud-realm" class="badge-gold">Luyện Khí Tầng 1</span>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar-label"><span>Sinh Lực</span><span id="hud-hp-text">500/500</span></div>
+            <div class="bar-track"><div id="hud-hp-fill" class="bar-fill hp"></div></div>
+          </div>
+          <div class="bar-wrap">
+            <div class="bar-label"><span>Tu Vi</span><span id="hud-exp-text">0/100</span></div>
+            <div class="bar-track"><div id="hud-exp-fill" class="bar-fill exp"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hud-stats-mini">
+        <div class="stat-pill" title="Linh Thạch">💎 <span id="hud-stones">500</span></div>
+        <div class="stat-pill" title="Thọ Nguyên">⏳ <span id="hud-age">16/120</span></div>
+        <div class="stat-pill" title="Tâm Ma">🔥 <span id="hud-demon">5%</span></div>
+        <div class="stat-pill" title="Công Đức Luân Hồi">☯ <span id="hud-merit">1000</span></div>
+      </div>
+    </header>
+
+    <!-- 2D WORLD CANVAS -->
+    <main class="world-stage">
+      <canvas id="world-canvas"></canvas>
+
+      <!-- Thanh thông báo nhanh & Độ kiếp -->
+      <div id="tribulation-banner" class="tribulation-banner hidden">
+        <div class="trib-title">⚡ CỬU TRỌNG THIÊN LÔI ĐỘ KIẾP (<span id="trib-bolt">0</span>/9) ⚡</div>
+        <div class="trib-actions">
+          <button class="btn btn-sm btn-jade" onclick="Game.useTribulationPill()">Dùng Đan Hồi Huyết (<span id="trib-pill-count">0</span>)</button>
+          <button class="btn btn-sm btn-gold" onclick="Game.activateTribulationShield()">Kích Hoạt Hộ Thuẫn</button>
+        </div>
+      </div>
+
+      <!-- Nhật ký nhỏ góc trên -->
+      <div id="floating-log" class="floating-log">Chào mừng đạo hữu đến với Cửu Thiên Thánh Địa! Chạm vào NPC hoặc nhấn Tu Luyện.</div>
+
+      <!-- Phím điều khiển nhanh góc phải -->
+      <div class="canvas-quick-actions">
+        <button id="btn-meditate" class="fab-btn jade" onclick="Game.toggleMeditate()">
+          <span class="fab-icon">🧘</span>
+          <span class="fab-text" id="meditate-label">Tu Luyện</span>
+        </button>
+        <button id="btn-breakthrough" class="fab-btn gold hidden" onclick="Game.startBreakthrough()">
+          <span class="fab-icon">⚡</span>
+          <span class="fab-text">Độ Kiếp</span>
+        </button>
+        <button class="fab-btn crimson" onclick="Game.calmHeartDemon()">
+          <span class="fab-icon">🪷</span>
+          <span class="fab-text">Thanh Tâm</span>
+        </button>
+      </div>
+
+      <!-- Virtual Joystick góc dưới trái -->
+      <div id="joystick-zone" class="joystick-zone">
+        <div class="joystick-base">
+          <div id="joystick-knob" class="joystick-knob"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- BOTTOM NAVIGATION MENU -->
+    <nav class="hud-bottom">
+      <button class="nav-btn" onclick="Game.openModal('character')"><span>👤</span>Nhân Vật</button>
+      <button class="nav-btn" onclick="Game.openModal('inventory')"><span>🎒</span>Túi Đồ</button>
+      <button class="nav-btn" onclick="Game.openModal('npcs')"><span>🏮</span>NPC</button>
+      <button class="nav-btn" onclick="Game.openModal('auction')"><span>⚖️</span>Đấu Giá</button>
+      <button class="nav-btn" onclick="Game.openModal('pets')"><span>🐉</span>Linh Thú</button>
+      <button class="nav-btn" onclick="Game.openModal('tournament')"><span>⚔️</span>Đại Hội</button>
+      <button class="nav-btn" onclick="Game.openModal('shop')"><span>🏪</span>Bảo Các</button>
+      <button class="nav-btn" onclick="Game.openModal('settings')"><span>⚙️</span>Cài Đặt</button>
+    </nav>
+  </div>
+
+  <!-- MODAL CHUNG -->
+  <div id="modal-overlay" class="modal-overlay hidden" onclick="Game.closeModalOnBackdrop(event)">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modal-title">Tiêu Đề</h3>
+        <button class="modal-close" onclick="Game.closeModal()">✕</button>
+      </div>
+      <div id="modal-body" class="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- MODAL TỬ VONG / LUÂN HỒI -->
+  <div id="death-overlay" class="modal-overlay hidden">
+    <div class="modal-box death-box">
+      <img src="assets/avatar.png" class="death-avatar" alt="Avatar" />
+      <h2 id="death-title">Tọa Hóa Quy Tiên</h2>
+      <p id="death-reason"></p>
+      <div id="death-summary" class="death-summary"></div>
+      <button class="btn btn-gold btn-lg" onclick="Game.enterReincarnation()">Chuyển Thế Luân Hồi</button>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
